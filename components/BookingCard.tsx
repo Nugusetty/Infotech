@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Company, Slot } from '../types';
 import { User, Sparkles, Calendar, Clock, Loader2, X, MapPin, Globe, History, ExternalLink, Mail, Phone } from 'lucide-react';
-import { generateCompanyInsight } from '../services/geminiService';
+import { generateCompanyInsight } from '../services/gemini';
 
 interface BookingCardProps {
   company: Company;
