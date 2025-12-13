@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Company, Slot } from '../types';
-import { User, Sparkles, Calendar, Clock, Loader2, X, MapPin, Globe, History, ExternalLink } from 'lucide-react';
+import { User, Sparkles, Calendar, Clock, Loader2, X, MapPin, Globe, History, ExternalLink, Mail, Phone } from 'lucide-react';
 import { generateCompanyInsight } from '../services/geminiService';
 
 interface BookingCardProps {
   company: Company;
-  onBook: (companyId: string, slotId: string, userName: string) => void;
+  onBook: (companyId: string, slotId: string, userName: string, email: string, phone: string) => void;
   onClose: () => void;
 }
 
 const BookingCard: React.FC<BookingCardProps> = ({ company, onBook, onClose }) => {
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [userName, setUserName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
 
@@ -19,6 +21,8 @@ const BookingCard: React.FC<BookingCardProps> = ({ company, onBook, onClose }) =
   useEffect(() => {
     setSelectedSlotId(null);
     setUserName('');
+    setEmail('');
+    setPhone('');
     setAiInsight(null);
     
     // Auto-load AI insight for "World Class" experience
@@ -33,10 +37,12 @@ const BookingCard: React.FC<BookingCardProps> = ({ company, onBook, onClose }) =
 
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedSlotId && userName.trim()) {
-      onBook(company.id, selectedSlotId, userName);
+    if (selectedSlotId && userName.trim() && email.trim() && phone.trim()) {
+      onBook(company.id, selectedSlotId, userName, email, phone);
       setSelectedSlotId(null);
       setUserName('');
+      setEmail('');
+      setPhone('');
     }
   };
 
@@ -206,27 +212,61 @@ const BookingCard: React.FC<BookingCardProps> = ({ company, onBook, onClose }) =
       {/* Booking Form - Only visible when a slot is selected */}
       {selectedSlotId && (
         <form onSubmit={handleBookingSubmit} className="mt-8 pt-6 border-t border-gray-200 animate-slide-up">
-           <div className="flex flex-col md:flex-row gap-4 items-end">
-             <div className="flex-grow w-full">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+             <div className="col-span-1 md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
-                <input
-                  type="text"
-                  required
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  placeholder="Enter your full name"
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
-                />
+                <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                    type="text"
+                    required
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    placeholder="Enter your full name"
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
+                    />
+                </div>
              </div>
-             <button
+             
+             <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
+                    />
+                </div>
+             </div>
+
+             <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+91 9876543210"
+                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
+                    />
+                </div>
+             </div>
+           </div>
+
+           <button
                 type="submit"
-                className="w-full md:w-auto px-6 py-2 bg-accent hover:bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                className="w-full px-6 py-3 bg-accent hover:bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 mt-2"
              >
                 <Clock size={18} />
                 Confirm Booking
              </button>
-           </div>
-           <p className="text-xs text-gray-500 mt-2 text-center md:text-left">
+           <p className="text-xs text-gray-500 mt-3 text-center">
               Booking for Slot {company.slots.findIndex(s => s.id === selectedSlotId) + 1} at {company.name}
            </p>
         </form>

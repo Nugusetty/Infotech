@@ -2,6 +2,8 @@ export interface Slot {
   id: string;
   isBooked: boolean;
   bookedBy?: string;
+  bookedEmail?: string;
+  bookedPhone?: string;
 }
 
 export interface Company {
@@ -18,4 +20,5 @@ export interface Company {
 export interface BookingFormData {
   name: string;
   email: string;
+  phone: string;
 }

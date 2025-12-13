@@ -18,21 +18,27 @@ const App: React.FC = () => {
   // Filter companies based on search query
   const filteredCompanies = companies.filter(company => 
     company.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    company.industry.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    company.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    company.website.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    company.industry.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    company.location.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    company.website.toLowerCase().includes(searchQuery.toLowerCase()) || 
     company.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Handler for booking a slot
-  const handleBookSlot = (companyId: string, slotId: string, userName: string) => {
+  const handleBookSlot = (companyId: string, slotId: string, userName: string, email: string, phone: string) => {
     setCompanies(prevCompanies => 
       prevCompanies.map(company => {
         if (company.id !== companyId) return company;
         
         const updatedSlots = company.slots.map(slot => {
           if (slot.id !== slotId) return slot;
-          return { ...slot, isBooked: true, bookedBy: userName };
+          return { 
+            ...slot, 
+            isBooked: true, 
+            bookedBy: userName,
+            bookedEmail: email,
+            bookedPhone: phone
+          };
         });
 
         return { ...company, slots: updatedSlots };
@@ -57,7 +63,7 @@ const App: React.FC = () => {
         const updatedSlots = company.slots.map(slot => {
           if (slot.id !== slotId) return slot;
           // Reset the slot
-          return { ...slot, isBooked: false, bookedBy: undefined };
+          return { ...slot, isBooked: false, bookedBy: undefined, bookedEmail: undefined, bookedPhone: undefined };
         });
 
         return { ...company, slots: updatedSlots };
@@ -66,7 +72,7 @@ const App: React.FC = () => {
 
     setNotification({
       message: "Booking cancelled successfully.",
-      type: 'success' // Using success styling for successful action completion
+      type: 'success'
     });
 
     setTimeout(() => setNotification(null), 3000);
@@ -75,7 +81,7 @@ const App: React.FC = () => {
   const totalBookings = companies.flatMap(c => c.slots).filter(s => s.isBooked).length;
 
   return (
-    <div className="min-h-screen pb-20 px-4 md:px-0">
+    <div className="min-h-screen pb-20 px-4 md:px-0 relative">
         {/* Header */}
         <header className="pt-8 pb-4 text-center">
             <div className="inline-flex items-center justify-center gap-2 mb-2 p-3 bg-white rounded-full shadow-md">
@@ -88,7 +94,7 @@ const App: React.FC = () => {
             <p className="text-secondary text-lg max-w-lg mx-auto mb-6">
                 Secure your spot with the world's top innovation leaders.
             </p>
-
+            
             {/* Tab Navigation */}
             <div className="flex justify-center mb-4">
                 <div className="bg-white p-1 rounded-xl shadow-md border border-gray-100 inline-flex">
