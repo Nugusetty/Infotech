@@ -5,9 +5,10 @@ import { User, Building2, CalendarCheck, Trash2, Mail, Phone } from 'lucide-reac
 interface BookingHistoryProps {
   companies: Company[];
   onDelete: (companyId: string, slotId: string) => void;
+  isAdmin: boolean;
 }
 
-const BookingHistory: React.FC<BookingHistoryProps> = ({ companies, onDelete }) => {
+const BookingHistory: React.FC<BookingHistoryProps> = ({ companies, onDelete, isAdmin }) => {
   // Extract all booked slots across all companies
   const allBookings = companies.flatMap(company => 
     company.slots
@@ -89,14 +90,16 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({ companies, onDelete }) 
                                     Confirmed
                                 </span>
                                 
-                                <button
-                                    onClick={() => onDelete(booking.companyId, booking.slotId)}
-                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
-                                    title="Cancel Booking"
-                                    aria-label="Delete booking"
-                                >
-                                    <Trash2 size={20} />
-                                </button>
+                                {isAdmin && (
+                                    <button
+                                        onClick={() => onDelete(booking.companyId, booking.slotId)}
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
+                                        title="Cancel Booking (Admin Only)"
+                                        aria-label="Delete booking"
+                                    >
+                                        <Trash2 size={20} />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}
