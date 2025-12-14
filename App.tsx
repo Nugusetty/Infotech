@@ -4,9 +4,9 @@ import BookingCard from './components/BookingCard';
 import BookingHistory from './components/BookingHistory';
 import CompanyModal from './components/CompanyModal';
 import LoginModal from './components/LoginModal';
-import { Company } from './types';
+import { Company, RegistrationFormData } from './types';
 import { INITIAL_COMPANIES } from './constants';
-import { Briefcase, Search, Building2, ArrowRight, Lock, LogOut, UserCheck } from 'lucide-react';
+import { Briefcase, Search, Building2, ArrowRight, LogOut, UserCheck } from 'lucide-react';
 
 const App: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>(INITIAL_COMPANIES);
@@ -37,7 +37,7 @@ const App: React.FC = () => {
   );
 
   // Handler for booking a slot
-  const handleBookSlot = (companyId: string, slotId: string, userName: string, email: string, phone: string) => {
+  const handleBookSlot = (companyId: string, slotId: string, data: RegistrationFormData) => {
     setCompanies(prevCompanies => 
       prevCompanies.map(company => {
         if (company.id !== companyId) return company;
@@ -47,9 +47,8 @@ const App: React.FC = () => {
           return { 
             ...slot, 
             isBooked: true, 
-            bookedBy: userName,
-            bookedEmail: email,
-            bookedPhone: phone
+            bookedBy: data.fullName,
+            registrationDetails: data
           };
         });
 
@@ -58,7 +57,7 @@ const App: React.FC = () => {
     );
 
     setNotification({
-      message: `Successfully booked a slot at ${companies.find(c => c.id === companyId)?.name} for ${userName}!`,
+      message: `Successfully registered for ${data.fullName}!`,
       type: 'success'
     });
 
@@ -75,7 +74,7 @@ const App: React.FC = () => {
         const updatedSlots = company.slots.map(slot => {
           if (slot.id !== slotId) return slot;
           // Reset the slot
-          return { ...slot, isBooked: false, bookedBy: undefined, bookedEmail: undefined, bookedPhone: undefined };
+          return { ...slot, isBooked: false, bookedBy: undefined, registrationDetails: undefined };
         });
 
         return { ...company, slots: updatedSlots };
@@ -375,7 +374,6 @@ const App: React.FC = () => {
                 <div className={`px-6 py-3 rounded-full shadow-xl text-white font-medium flex items-center justify-center gap-2 ${
                     notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'
                 }`}>
-                    {/* Image/Icon removed as requested */}
                     {notification.message}
                 </div>
             </div>

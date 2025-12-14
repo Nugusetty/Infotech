@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>AIKYA-AI Infotech Bookings</title>
     
-    <!-- Social Media Meta Tags for better sharing previews -->
+    <!-- Social Media Meta Tags -->
     <meta property="og:title" content="AIKYA-AI Infotech Bookings" />
     <meta property="og:description" content="Secure your spot with the world's top innovation leaders. Premium booking platform for AIKYA-AI Infotech PVT LTD." />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="AIKYA-AI Infotech" />
     
+    <!-- Using Tailwind CDN for simplicity in this specific setup -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -58,11 +59,14 @@
   <script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
     "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3"
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "vite": "https://esm.sh/vite@^7.2.7",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "jspdf": "https://esm.sh/jspdf@2.5.1"
   }
 }
 </script>
@@ -70,6 +74,7 @@
 </head>
   <body>
     <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
+    <!-- Entry point for the build system -->
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>

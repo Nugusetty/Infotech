@@ -1,6 +1,7 @@
-import React from 'react';
-import { Company } from '../types';
-import { User, Building2, CalendarCheck, Trash2, Mail, Phone } from 'lucide-react';
+import React, { useState } from 'react';
+import { Company, RegistrationFormData } from '../types';
+import { User, CalendarCheck, Trash2, Share2 } from 'lucide-react';
+import ShareModal from './ShareModal';
 
 interface BookingHistoryProps {
   companies: Company[];
@@ -8,7 +9,16 @@ interface BookingHistoryProps {
   isAdmin: boolean;
 }
 
+interface ShareData {
+    companyName: string;
+    designation: string;
+    candidateName: string;
+    registrationDetails?: RegistrationFormData;
+}
+
 const BookingHistory: React.FC<BookingHistoryProps> = ({ companies, onDelete, isAdmin }) => {
+  const [selectedBookingForShare, setSelectedBookingForShare] = useState<ShareData | null>(null);
+
   // Extract all booked slots across all companies
   const allBookings = companies.flatMap(company => 
     company.slots
@@ -17,8 +27,7 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({ companies, onDelete, is
         companyName: company.name,
         slotId: slot.id,
         userName: slot.bookedBy,
-        userEmail: slot.bookedEmail,
-        userPhone: slot.bookedPhone,
+        registrationDetails: slot.registrationDetails,
         companyIndustry: company.industry,
         companyId: company.id
       }))
@@ -44,67 +53,92 @@ const BookingHistory: React.FC<BookingHistoryProps> = ({ companies, onDelete, is
                     <p className="text-sm">Select a company from the main tab to make a reservation.</p>
                 </div>
             ) : (
-                <div className="grid gap-4">
-                    {allBookings.map((booking, idx) => (
-                        <div key={`${booking.companyId}-${booking.slotId}`} className="flex flex-col sm:flex-row sm:items-center p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-accent/30 transition-colors gap-4 group">
-                            {/* Avatar */}
-                            <div className="h-14 w-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-md shrink-0">
-                                {booking.userName?.charAt(0).toUpperCase()}
-                            </div>
+                <div className="grid gap-6">
+                    {allBookings.map((booking) => (
+                        <div key={`${booking.companyId}-${booking.slotId}`} className="flex flex-col p-5 bg-gray-50 rounded-xl border border-gray-200 hover:border-accent/30 transition-colors gap-4 group">
                             
-                            {/* User & Company Details */}
-                            <div className="flex-grow min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-1">
-                                    <h3 className="font-bold text-gray-900 text-lg leading-none">{booking.userName}</h3>
+                            {/* Header Row */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-md shrink-0">
+                                        {booking.userName?.charAt(0).toUpperCase() || 'U'}
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-gray-900 text-lg leading-tight">{booking.userName}</h3>
+                                        <div className="text-xs text-gray-500">{booking.registrationDetails?.joiningDesignation || 'Candidate'}</div>
+                                    </div>
                                 </div>
                                 
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mb-2">
-                                    {booking.userPhone && (
-                                        <div className="flex items-center gap-1">
-                                            <Phone size={12} className="text-gray-400" />
-                                            <span>{booking.userPhone}</span>
-                                        </div>
-                                    )}
-                                    {booking.userEmail && (
-                                        <div className="flex items-center gap-1">
-                                            <Mail size={12} className="text-gray-400" />
-                                            <span className="truncate max-w-[200px]">{booking.userEmail}</span>
-                                        </div>
-                                    )}
-                                </div>
+                                <div className="flex items-center gap-3">
+                                    {/* Share Button */}
+                                    <button 
+                                        onClick={() => setSelectedBookingForShare({
+                                            companyName: booking.companyName,
+                                            designation: booking.registrationDetails?.joiningDesignation || 'New Role',
+                                            candidateName: booking.userName || 'Candidate',
+                                            registrationDetails: booking.registrationDetails
+                                        })}
+                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all"
+                                        title="Share Booking"
+                                    >
+                                        <Share2 size={18} />
+                                    </button>
 
-                                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-700 bg-white p-2 rounded-md border border-gray-100 inline-flex">
-                                    <Building2 size={14} className="text-accent" />
-                                    <span className="font-medium truncate max-w-[200px] sm:max-w-none">{booking.companyName}</span>
-                                    <span className="hidden sm:inline text-gray-300">|</span>
-                                    <span className="text-xs uppercase bg-gray-100 px-2 py-0.5 rounded text-gray-500">
-                                        {booking.companyIndustry}
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                        Confirmed
                                     </span>
+                                    
+                                    {isAdmin && (
+                                        <button
+                                            onClick={() => onDelete(booking.companyId, booking.slotId)}
+                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
+                                            title="Cancel Booking (Admin Only)"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Status & Actions */}
-                            <div className="shrink-0 flex items-center gap-4 mt-2 sm:mt-0 ml-auto sm:ml-0">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 text-sm font-bold rounded-full">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                                    Confirmed
-                                </span>
-                                
-                                {isAdmin && (
-                                    <button
-                                        onClick={() => onDelete(booking.companyId, booking.slotId)}
-                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
-                                        title="Cancel Booking (Admin Only)"
-                                        aria-label="Delete booking"
-                                    >
-                                        <Trash2 size={20} />
-                                    </button>
+                            {/* Details Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm border-t border-gray-200 pt-3">
+                                <div className="p-2 bg-white rounded border border-gray-100">
+                                    <span className="block text-xs text-gray-400 uppercase">Company</span>
+                                    <span className="font-medium text-gray-800">{booking.companyName}</span>
+                                </div>
+                                {booking.registrationDetails && (
+                                    <>
+                                        <div className="p-2 bg-white rounded border border-gray-100">
+                                            <span className="block text-xs text-gray-400 uppercase">Father Name</span>
+                                            <span className="font-medium text-gray-800">{booking.registrationDetails.fatherName}</span>
+                                        </div>
+                                        <div className="p-2 bg-white rounded border border-gray-100">
+                                            <span className="block text-xs text-gray-400 uppercase">PAN</span>
+                                            <span className="font-medium text-gray-800">{booking.registrationDetails.panNumber}</span>
+                                        </div>
+                                        <div className="p-2 bg-white rounded border border-gray-100">
+                                            <span className="block text-xs text-gray-400 uppercase">Mobile / CTC</span>
+                                            <span className="font-medium text-gray-800">{booking.registrationDetails.currentCTC || 'N/A'}</span>
+                                        </div>
+                                         <div className="p-2 bg-white rounded border border-gray-100">
+                                            <span className="block text-xs text-gray-400 uppercase">Joining Date</span>
+                                            <span className="font-medium text-gray-800">{booking.registrationDetails.joiningDate || 'N/A'}</span>
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         </div>
                     ))}
                 </div>
             )}
+
+            {/* Share Modal */}
+            <ShareModal 
+                isOpen={!!selectedBookingForShare}
+                onClose={() => setSelectedBookingForShare(null)}
+                bookingDetails={selectedBookingForShare}
+            />
         </div>
     </div>
   );

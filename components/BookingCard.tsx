@@ -1,28 +1,87 @@
 import React, { useState, useEffect } from 'react';
-import { Company, Slot } from '../types';
-import { User, Sparkles, Calendar, Clock, Loader2, X, MapPin, Globe, History, ExternalLink, Mail, Phone } from 'lucide-react';
+import { Company, RegistrationFormData } from '../types';
+import { User, Sparkles, Calendar, Clock, Loader2, X, MapPin, Globe, History, ExternalLink, FileText, Landmark, GraduationCap, Briefcase } from 'lucide-react';
 import { generateCompanyInsight } from '../services/geminiService';
+
+// Reusable components defined OUTSIDE the main component to prevent re-rendering lag
+const InputField = ({ label, name, value, onChange, type = "text", required = true, placeholder = "", className = "" }: any) => (
+  <div className={`mb-3 ${className}`}>
+    <label className="block text-xs font-semibold text-gray-600 mb-1">{label} {required && '*'}</label>
+    <input
+      type={type}
+      name={name}
+      required={required}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all text-sm"
+    />
+  </div>
+);
+
+const SelectField = ({ label, name, value, onChange, options, required = true }: any) => (
+  <div className="mb-3">
+    <label className="block text-xs font-semibold text-gray-600 mb-1">{label} {required && '*'}</label>
+    <select
+      name={name}
+      required={required}
+      value={value}
+      onChange={onChange}
+      className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all text-sm bg-white"
+    >
+      {options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
+    </select>
+  </div>
+);
 
 interface BookingCardProps {
   company: Company;
-  onBook: (companyId: string, slotId: string, userName: string, email: string, phone: string) => void;
+  onBook: (companyId: string, slotId: string, formData: RegistrationFormData) => void;
   onClose: () => void;
 }
 
 const BookingCard: React.FC<BookingCardProps> = ({ company, onBook, onClose }) => {
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
-  const [userName, setUserName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Registration Form State
+  const [formData, setFormData] = useState<RegistrationFormData>({
+    companyName: '',
+    fullName: '',
+    fatherName: '',
+    motherName: '',
+    panNumber: '',
+    dob: '',
+    uanNumber: '',
+    permanentAddress: '',
+    offerDate: '',
+    joiningDate: '',
+    joiningCTC: '',
+    joiningDesignation: '',
+    hikeDate: '',
+    currentCTC: '',
+    currentDesignation: '',
+    resignationDate: '',
+    relivingDate: '',
+    pfRequired: 'No',
+    highestQualification: '',
+    yearOfPass: '',
+    technology: '',
+    bankName: '',
+    bankAccountNumber: '',
+    bankBranch: '',
+    bankIFSCCode: '',
+    gender: 'Male',
+    marriageStatus: 'Single',
+  });
+
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
 
   // Reset local state when company changes
   useEffect(() => {
     setSelectedSlotId(null);
-    setUserName('');
-    setEmail('');
-    setPhone('');
+    setFormData(prev => ({ ...prev, companyName: company.name })); // Pre-fill company name
     setAiInsight(null);
     
     // Auto-load AI insight for "World Class" experience
@@ -35,14 +94,34 @@ const BookingCard: React.FC<BookingCardProps> = ({ company, onBook, onClose }) =
     loadInsight();
   }, [company.id, company.name, company.industry]);
 
-  const handleBookingSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedSlotId && userName.trim() && email.trim() && phone.trim()) {
-      onBook(company.id, selectedSlotId, userName, email, phone);
+    if (selectedSlotId) {
+      setIsSubmitting(true);
+      
+      // Artificial small delay for better UX "processing" feel, and to ensure UI updates
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      onBook(company.id, selectedSlotId, formData);
       setSelectedSlotId(null);
-      setUserName('');
-      setEmail('');
-      setPhone('');
+      setIsSubmitting(false);
+      
+      // Reset sensitive fields
+      setFormData(prev => ({
+        ...prev,
+        fullName: '',
+        fatherName: '',
+        motherName: '',
+        panNumber: '',
+        dob: '',
+        uanNumber: '',
+        permanentAddress: '',
+      }));
     }
   };
 
@@ -61,7 +140,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ company, onBook, onClose }) =
   };
 
   return (
-    <div className="glass-panel w-full max-w-4xl mx-auto mt-8 p-6 md:p-8 rounded-2xl shadow-2xl animate-fade-in transition-all relative">
+    <div className="glass-panel w-full max-w-5xl mx-auto mt-8 p-6 md:p-8 rounded-2xl shadow-2xl animate-fade-in transition-all relative">
       
       {/* Close Button */}
       <button 
@@ -209,62 +288,98 @@ const BookingCard: React.FC<BookingCardProps> = ({ company, onBook, onClose }) =
         </div>
       </div>
 
-      {/* Booking Form - Only visible when a slot is selected */}
+      {/* COMPREHENSIVE REGISTRATION FORM */}
       {selectedSlotId && (
         <form onSubmit={handleBookingSubmit} className="mt-8 pt-6 border-t border-gray-200 animate-slide-up">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-             <div className="col-span-1 md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
-                <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                    type="text"
-                    required
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    placeholder="Enter your full name"
-                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
+           <div className="flex items-center gap-2 mb-6">
+              <FileText size={24} className="text-accent" />
+              <h3 className="text-xl font-bold text-gray-800">Registration Form</h3>
+           </div>
+           
+           <div className="space-y-6">
+             {/* Section 1: Personal Details */}
+             <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+               <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Personal Details</h4>
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <InputField label="Company Name" name="companyName" value={formData.companyName} onChange={handleInputChange} placeholder="Company Name" />
+                  <InputField label="Full Name (As Per Aadhaar)" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="Full Name" />
+                  <InputField label="Father Name" name="fatherName" value={formData.fatherName} onChange={handleInputChange} placeholder="Father's Name" />
+                  <InputField label="Mother Name" name="motherName" value={formData.motherName} onChange={handleInputChange} placeholder="Mother's Name" />
+                  <InputField label="Date Of Birth" name="dob" type="date" value={formData.dob} onChange={handleInputChange} />
+                  <SelectField label="Gender" name="gender" value={formData.gender} onChange={handleInputChange} options={['Male', 'Female', 'Other']} />
+                  <SelectField label="Marriage Status" name="marriageStatus" value={formData.marriageStatus} onChange={handleInputChange} options={['Single', 'Married', 'Divorced', 'Widowed']} />
+                  <div className="md:col-span-3">
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Permanent Address (As Per Aadhaar) *</label>
+                    <textarea 
+                      name="permanentAddress" 
+                      required 
+                      value={formData.permanentAddress} 
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all text-sm h-20 resize-none"
                     />
-                </div>
+                  </div>
+               </div>
              </div>
-             
-             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
-                    />
+
+             {/* Section 2: Identity & Employment */}
+             <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                    <Briefcase size={16} /> Employment & Identity
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <InputField label="PAN Number" name="panNumber" value={formData.panNumber} onChange={handleInputChange} placeholder="ABCDE1234F" />
+                  <InputField label="UAN Number" name="uanNumber" value={formData.uanNumber} onChange={handleInputChange} placeholder="Universal Account Number" />
+                  <SelectField label="PF Required" name="pfRequired" value={formData.pfRequired} onChange={handleInputChange} options={['Yes', 'No']} />
+                  
+                  <InputField label="Offer Date" name="offerDate" type="date" value={formData.offerDate} onChange={handleInputChange} />
+                  <InputField label="Joining Date" name="joiningDate" type="date" value={formData.joiningDate} onChange={handleInputChange} />
+                  <InputField label="Joining CTC" name="joiningCTC" value={formData.joiningCTC} onChange={handleInputChange} placeholder="e.g. 5.5 LPA" />
+                  
+                  <InputField label="Joining Designation" name="joiningDesignation" value={formData.joiningDesignation} onChange={handleInputChange} placeholder="e.g. Software Engineer" />
+                  <InputField label="Hike Date" name="hikeDate" type="date" required={false} value={formData.hikeDate} onChange={handleInputChange} />
+                  <InputField label="Current CTC" name="currentCTC" value={formData.currentCTC} onChange={handleInputChange} placeholder="e.g. 7.5 LPA" />
+                  
+                  <InputField label="Current Designation" name="currentDesignation" value={formData.currentDesignation} onChange={handleInputChange} placeholder="e.g. Senior Engineer" />
+                  <InputField label="Resignation Date" name="resignationDate" type="date" required={false} value={formData.resignationDate} onChange={handleInputChange} />
+                  <InputField label="Reliving Date (Last Working Day)" name="relivingDate" type="date" required={false} value={formData.relivingDate} onChange={handleInputChange} />
                 </div>
              </div>
 
-             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-                <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 9876543210"
-                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
-                    />
+             {/* Section 3: Education */}
+             <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                    <GraduationCap size={16} /> Education
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <InputField label="Highest Education Qualification" name="highestQualification" value={formData.highestQualification} onChange={handleInputChange} placeholder="e.g. B.Tech" />
+                  <InputField label="Year of Pass" name="yearOfPass" value={formData.yearOfPass} onChange={handleInputChange} placeholder="e.g. 2023" />
+                  <InputField label="Technology (Course Name)" name="technology" value={formData.technology} onChange={handleInputChange} placeholder="e.g. Computer Science" />
+                </div>
+             </div>
+
+             {/* Section 4: Banking */}
+             <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                    <Landmark size={16} /> Banking Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <InputField label="Bank Name" name="bankName" value={formData.bankName} onChange={handleInputChange} placeholder="Bank Name" />
+                  <InputField label="Bank Account Number" name="bankAccountNumber" value={formData.bankAccountNumber} onChange={handleInputChange} placeholder="Account Number" />
+                  <InputField label="Bank Branch" name="bankBranch" value={formData.bankBranch} onChange={handleInputChange} placeholder="Branch Name" />
+                  <InputField label="Bank IFSC Code" name="bankIFSCCode" value={formData.bankIFSCCode} onChange={handleInputChange} placeholder="IFSC Code" />
                 </div>
              </div>
            </div>
 
            <button
                 type="submit"
-                className="w-full px-6 py-3 bg-accent hover:bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 mt-2"
+                disabled={isSubmitting}
+                className={`w-full mt-6 px-6 py-4 text-white font-bold text-lg rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center gap-3
+                  ${isSubmitting ? 'bg-gray-400 cursor-wait' : 'bg-accent hover:bg-blue-600 hover:shadow-xl'}
+                `}
              >
-                <Clock size={18} />
-                Confirm Booking
+                {isSubmitting ? <Loader2 size={24} className="animate-spin" /> : <Clock size={20} />}
+                {isSubmitting ? 'Processing Registration...' : 'Confirm Registration'}
              </button>
            <p className="text-xs text-gray-500 mt-3 text-center">
               Booking for Slot {company.slots.findIndex(s => s.id === selectedSlotId) + 1} at {company.name}
